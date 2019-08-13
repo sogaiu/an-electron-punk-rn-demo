@@ -1,0 +1,164 @@
+= An Electron Punk React Native Demo
+
+This project provides pieces and instructions for testing communication between a running cljs React Native project and a https://github.com/Lokeh/punk[punk] UI (REBL-like functionality) running in an Electron app.
+
+N.B. So far, I've only tested with an Android device and will assume basic familiarity with: Android SDK related setup.
+
+N.B. This repository uses git submodules so proper cloning might consist of:
+
+```
+git clone --recursive https://github.com/sogaiu/an-electron-punk-rn-demo
+```
+
+or:
+
+```
+git clone https://github.com/sogaiu/an-electron-punk-rn-demo
+cd an-electron-punk-rn-demo
+git submodule update --init --recursive
+```
+
+== Overview
+
+Preparation consists of:
+
+1. Building and starting the Electron app
+
+2. Preparation and startup of a cljs React Native project
+
+3. Connecting to the Electron app and interacting
+
+=== Electron Punk App Preparation
+
+1. Build the Electron app:
++
+----
+cd shadow-cljs-electron-react
+yarn
+yarn shadow-cljs watch main renderer
+----
+2. Start the Electron app via another terminal:
++
+----
+yarn electron .
+----
+on Arch Linux or derivatives or other, might need to do:
++
+----
+yarn electron . --no-sandbox
+----
++
+The Electron app should appear on screen.  It should have started a WebSocket server on port 9876.
++
+Resizing the window appropriately might make working with it nicer :)
+
+=== Preparation and startup of a cljs React Native project
+
+This repository contains a slightly modified cljs React Native repository for demo purposes.
+
+Install the prerequisites:
+
+----
+cd reagent-expo
+yarn
+----
+
+Compile:
+
+----
+yarn shadow-cljs watch app
+----
+
+Wait for the previous step to finish before proceeding.  A line with the text "Build completed" on it should indicate completion.
+
+In another terminal, start expo (if necessary, install expo-cli via yarn: `yarn add expo-cli`):
+
+----
+yarn start
+----
+
+A fair bit of text should appear including a QR code.
+
+Connect an Android device and start the Expo client (installable from the Play Store, Aurora Store, etc.).  I'll assume familiarity with enabling Developer mode, enabling USB debugging, etc.
+
+Select the "Scan QR Code" option in the Expo client and point the device's camera appropriately to capture the QR code.
+
+Shortly after the terminal may briefly show that the bundler has prepared a JS bundle, then the bottom of the device should show that the bundle is being transferred to it.
+
+Once the transfer completes, a nice Shadow CLJS logo should appear on the screen of the device.
+
+=== Trying It Out
+
+The idea is to instruct the app to initiate communication with the electron app via WebSockets.  In this case, this will be done via Shadow CLJS' cljs-repl capability.
+
+Start a cljs-repl to prepare for interaction in another terminal (so many...):
+
+----
+yarn shadow-cljs cljs-repl app
+----
+
+This should result in a prompt like:
+
+----
+[1:1]~cljs.user=>
+----
+
+Send it a number to make sure there is actually a connection to a JS runtime.  The result should be the number.
+
+Determine the IP address of the machine which is running the electron app, this information will be necessary to setup the connection.  It is almost certainly not going to be 127.0.0.1 as indicated below.
+
+Try an appropriately adapted version of the following:
+
+----
+;; preliminaries
+(require '[covalent.ws :as cw])
+(in-ns 'covalent.ws)
+
+;; convenience function for set up
+(def conn
+  (start-punk "127.0.0.1" 9876)) ; XXX: ip address of box w/ electron + punk
+
+;; try sending a value to the electron app for viewing in punk.ui
+(tap> {:a 1 :b 2})
+
+;; now take a look at the electron app and start clicking a bit :)
+
+;; other things to try:
+(tap> #{:ant :bee :fox :elephant})
+(tap> [2 3 5 7 9])
+(tap> {:bag #{:pencil :notepad :water-bottle}
+       :position :standing
+       :mind [:tune :chatter]})
+(tap> (atom {:position :sitting}))
+
+;; things known to cause problems:
+(tap> *ns*)
+(tap> #'start-punk)
+----
+
+== Limitations and Issues
+
+The websocket connection closes after a bit.  My current suspicion is something on the RN side.  So far I have not succeeded in determining the cause, nor do I have any work-around implemented.
+
+From time to time, it appears that clicking in the Punk UI does not produce the desired result.  I don't understand why this is and have not noticed it in the upstream Punk, so my current suspicion is that I've messed up somewhere.  Blame likely lies with yours truly :)
+
+Unlike REBL, punk's UI has no direct access to the values in the running cljs RN project.  At the moment, only values (or datafied versions) that can survive serializing / deserializing are handled.
+
+== Acknowledgments
+
+Thanks to (at least) the following folks:
+
+* cark
+* danielneal
+* darwin
+* dmiller
+* kajism
+* Lokeh
+* mauricioszabo
+* nasser
+* Saikyun
+* seancorfield
+* stuarthalloway
+* theophilusx
+* thheller
+* timsgardner
