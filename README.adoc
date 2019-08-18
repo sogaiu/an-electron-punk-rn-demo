@@ -138,10 +138,6 @@ Try an appropriately adapted version of the following:
 
 == Limitations and Issues
 
-The websocket connection closes after a bit.  My current suspicion is something on the RN side.  So far I have not succeeded in determining the cause, nor do I have any work-around implemented.
-
-From time to time, it appears that clicking in the Punk UI does not produce the desired result.  I don't understand why this is and have not noticed it in the upstream Punk, so my current suspicion is that I've messed up somewhere.  Blame likely lies with yours truly :)
-
 Unlike REBL, punk's UI has no direct access to the values in the running cljs RN project.  At the moment, only values (or datafied versions) that can survive serializing / deserializing are handled.
 
 == Acknowledgments
